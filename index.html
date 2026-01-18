@@ -4,7 +4,8 @@
 <link rel="icon" href="./kimsze_sharp16.ico?v=20260111a" sizes="any">
 <link rel="shortcut icon" href="./kimsze_sharp16.ico?v=20260111a">
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <!-- ✅ make viewport work properly on phones -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
   <title>Addition — Place Value Mat (Step-by-step)</title>
 
   <style>
@@ -37,7 +38,7 @@
       --ease: cubic-bezier(.2,.85,.2,1);
 
       /* Layout */
-      --topbarH: 62px;
+      --topbarH: 62px; /* used as a min-height only on mobile */
       --gap: 14px;
       --maxW: 1320px;
 
@@ -54,22 +55,32 @@
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       background: var(--bg);
       color: var(--ink);
-      overflow: hidden; /* no window scrolling */
+
+      /* ✅ allow scrolling on phones + inertia scroll */
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
+      -webkit-text-size-adjust: 100%;
     }
 
     .topbar{
-      height: var(--topbarH);
+      /* ✅ do NOT force fixed height; allow wrapping on phones */
+      height: auto;
+      min-height: var(--topbarH);
+
       border-bottom:1px solid var(--line);
       background: rgba(255,255,255,.92);
       backdrop-filter: blur(8px);
       display:flex;
-      align-items:center;
+      align-items:flex-start;
       justify-content:space-between;
       gap:12px;
       padding: 10px 14px;
       position: sticky;
-      top:0;
+      top: 0;
       z-index: 20;
+
+      /* ✅ safe-area for iPhone notch */
+      padding-top: calc(10px + env(safe-area-inset-top));
     }
     .title{
       display:flex;
@@ -112,6 +123,7 @@
       cursor:pointer;
       white-space:nowrap;
       transition: transform .08s ease;
+      touch-action: manipulation;
     }
     .btn:active{ transform: translateY(1px); }
     .btn.primary{
@@ -126,14 +138,18 @@
     }
 
     .wrap{
-      height: calc(100vh - var(--topbarH));
+      /* ✅ remove fixed viewport height so content can extend */
+      height: auto;
+      min-height: calc(100vh - var(--topbarH));
       max-width: var(--maxW);
       margin: 0 auto;
-      padding: 12px 14px 10px;
+      padding: 12px 14px 14px;
       display:grid;
       grid-template-columns: 1.55fr .85fr;
       gap: var(--gap);
-      overflow:hidden;
+
+      /* ✅ don't clip content on phones */
+      overflow: visible;
       min-height: 0;
     }
 
@@ -383,6 +399,10 @@
       align-items:center;
       gap: 12px;
       white-space:nowrap;
+      max-width: 100%;
+      overflow-x: auto;          /* ✅ allow sideways scroll if needed */
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 2px;
     }
     .ansPill{
       min-width: 70px;
@@ -397,6 +417,7 @@
       font-size: 34px;
       color:#000;
       box-shadow: 0 10px 18px rgba(0,0,0,.12);
+      flex: 0 0 auto;
     }
     .eqHint{
       font-size:12px;
@@ -733,6 +754,7 @@
       align-items:center;
       justify-content:space-between;
       gap:10px;
+      flex-wrap: wrap;
     }
     .childTitle{
       font-weight:1000;
@@ -813,6 +835,71 @@
       .wrap{ grid-template-columns: 1fr; }
       .algoBox{ height: 300px; }
       .panelBody{ grid-template-rows: 300px auto; }
+    }
+
+    /* =========================
+       ✅ Mobile Optimisations
+       ========================= */
+    @media (max-width: 980px){
+      .wrap{ padding: 10px 10px 14px; }
+      .cardHead, .panelHead, .panelBody, .matWrap, .eqBar{ padding-left: 12px; padding-right: 12px; }
+    }
+
+    @media (max-width: 640px){
+      :root{
+        --gap: 10px;
+        --algoColW: 44px;
+        --algoGap: 10px;
+      }
+
+      .title .big{ font-size: 16px; }
+      .actions{ gap:8px; justify-content:flex-start; }
+      .pill{ font-size: 11px; padding: 6px 8px; }
+      .btn{ padding: 10px 10px; font-size: 13px; border-radius: 14px; }
+
+      .mat{ min-height: 360px; }
+
+      /* ✅ make right panel natural height on phone */
+      .panelBody{
+        grid-template-rows: auto auto;
+        gap: 12px;
+      }
+      .algoBox{
+        height: auto;
+        min-height: 240px;
+        padding: 10px;
+      }
+
+      .digitsCol{ font-size: 40px; }
+      .plus{ font-size: 24px; }
+      .resBox{ height: 44px; font-size: 28px; border-radius: 14px; }
+
+      .stepTitle{ font-size: 26px; }
+      .stepText{ font-size: 16px; }
+      .stepEq{ font-size: 16px; }
+      .miniBox{ width: 48px; height: 40px; font-size: 22px; }
+
+      /* ✅ equation line scales better */
+      .eq{ font-size: clamp(22px, 7vw, 38px); gap: 8px; }
+      .ansPill{ height: 46px; font-size: 28px; border-radius: 14px; }
+
+      /* ✅ forms stack */
+      .fields{ grid-template-columns: 1fr; }
+      .randRow{ grid-template-columns: 1fr; }
+      .rowBtns{ justify-content:flex-start; }
+      .seg{ width: 100%; }
+      .seg button{ flex: 1 1 auto; text-align:center; }
+
+      /* ✅ child panel stack */
+      .childGrid{ grid-template-columns: 1fr; }
+      #btnChildCheck{ width: 100%; }
+
+      /* ✅ credit should not cover buttons */
+      .credit{
+        position: static;
+        padding: 10px 12px 14px;
+        text-align: right;
+      }
     }
   </style>
   <script src="https://cdn.counter.dev/script.js" data-id="825e93b6-ce99-40ef-8bcc-125f13297433" data-utcoffset="8"></script>
@@ -908,7 +995,7 @@
             </div>
           </div>
 
-          <!-- ✅ Child Try-It Panel (NEW) -->
+          <!-- ✅ Child Try-It Panel -->
           <div class="childPanel" id="childPanel">
             <div class="childTitleRow">
               <div class="childTitle">🧒 Child Try-It Panel</div>
@@ -1099,7 +1186,7 @@
   };
 
   // =========================
-  // ✅ Confetti (NEW)
+  // ✅ Confetti
   // =========================
   function burstConfetti(){
     const layer = ui.confettiLayer;
@@ -1125,7 +1212,6 @@
       p.style.opacity = "0.95";
       p.style.transform = `rotate(${Math.random()*360}deg)`;
 
-      // no fixed palette needed; simple random HSL
       const hue = Math.floor(Math.random()*360);
       p.style.background = `hsl(${hue} 90% 55%)`;
 
@@ -1154,7 +1240,6 @@
   function pulseTeachingPanel(){
     ui.teachCard.classList.remove("pulseTeacher");
     ui.lowerPanel.classList.remove("pulseTeacher");
-    // reflow
     void ui.teachCard.offsetWidth;
     ui.teachCard.classList.add("pulseTeacher");
     ui.lowerPanel.classList.add("pulseTeacher");
@@ -1221,72 +1306,68 @@
     src.start(t0);
     src.stop(t0 + dur + 0.02);
   }
-function playClap(){
-  const ctx = ensureAudio();
-  if (!ctx) return;
 
-  // ✅ Important: audio may still be suspended unless resumed in gesture
-  if (ctx.state === "suspended"){
-    ctx.resume().then(() => playClap()).catch(()=>{});
-    return;
-  }
-
-  const t0 = ctx.currentTime;
-
-  // Louder + cleaner
-  const comp = ctx.createDynamicsCompressor();
-  comp.threshold.setValueAtTime(-20, t0);
-  comp.knee.setValueAtTime(18, t0);
-  comp.ratio.setValueAtTime(6, t0);
-  comp.attack.setValueAtTime(0.003, t0);
-  comp.release.setValueAtTime(0.12, t0);
-  comp.connect(ctx.destination);
-
-  const mkBurst = (offset, dur, f0, q, gain) => {
-    const start = t0 + offset;
-    const len = Math.max(0.02, dur);
-    const bufferSize = Math.floor(ctx.sampleRate * len);
-    const buf = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buf.getChannelData(0);
-
-    for (let i=0;i<bufferSize;i++){
-      const x = i / bufferSize;
-      const env = Math.pow(1 - x, 2.6);
-      data[i] = (Math.random()*2 - 1) * env;
+  function playClap(){
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    if (ctx.state === "suspended"){
+      ctx.resume().then(() => playClap()).catch(()=>{});
+      return;
     }
 
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
+    const t0 = ctx.currentTime;
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.setValueAtTime(-20, t0);
+    comp.knee.setValueAtTime(18, t0);
+    comp.ratio.setValueAtTime(6, t0);
+    comp.attack.setValueAtTime(0.003, t0);
+    comp.release.setValueAtTime(0.12, t0);
+    comp.connect(ctx.destination);
 
-    const bp = ctx.createBiquadFilter();
-    bp.type = "bandpass";
-    bp.frequency.setValueAtTime(f0, start);
-    bp.Q.setValueAtTime(q, start);
+    const mkBurst = (offset, dur, f0, q, gain) => {
+      const start = t0 + offset;
+      const len = Math.max(0.02, dur);
+      const bufferSize = Math.floor(ctx.sampleRate * len);
+      const buf = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buf.getChannelData(0);
 
-    const hp = ctx.createBiquadFilter();
-    hp.type = "highpass";
-    hp.frequency.setValueAtTime(500, start);
+      for (let i=0;i<bufferSize;i++){
+        const x = i / bufferSize;
+        const env = Math.pow(1 - x, 2.6);
+        data[i] = (Math.random()*2 - 1) * env;
+      }
 
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0.0001, start);
-    g.gain.exponentialRampToValueAtTime(gain, start + 0.008);
-    g.gain.exponentialRampToValueAtTime(0.0001, start + len);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
 
-    src.connect(bp);
-    bp.connect(hp);
-    hp.connect(g);
-    g.connect(comp);
+      const bp = ctx.createBiquadFilter();
+      bp.type = "bandpass";
+      bp.frequency.setValueAtTime(f0, start);
+      bp.Q.setValueAtTime(q, start);
 
-    src.start(start);
-    src.stop(start + len + 0.01);
-  };
+      const hp = ctx.createBiquadFilter();
+      hp.type = "highpass";
+      hp.frequency.setValueAtTime(500, start);
 
-  // 4 overlapping bursts → clap
-  mkBurst(0.00, 0.13, 1600, 1.1, 0.70);
-  mkBurst(0.03, 0.14, 1200, 1.0, 0.55);
-  mkBurst(0.07, 0.11, 2200, 1.4, 0.40);
-  mkBurst(0.10, 0.10, 900,  0.9, 0.30);
-}
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, start);
+      g.gain.exponentialRampToValueAtTime(gain, start + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, start + len);
+
+      src.connect(bp);
+      bp.connect(hp);
+      hp.connect(g);
+      g.connect(comp);
+
+      src.start(start);
+      src.stop(start + len + 0.01);
+    };
+
+    mkBurst(0.00, 0.13, 1600, 1.1, 0.70);
+    mkBurst(0.03, 0.14, 1200, 1.0, 0.55);
+    mkBurst(0.07, 0.11, 2200, 1.4, 0.40);
+    mkBurst(0.10, 0.10, 900,  0.9, 0.30);
+  }
 
   // ======= HELPERS =======
   const clampInt = (n, min, max) => {
@@ -1440,7 +1521,7 @@ function playClap(){
       ensureTwoColStructure(pileEl);
       for (const t of tokens) putTokenTwoCol(pileEl, t);
     } else {
-      pileEl.className = "pile pileGrid"; // 5 top, 4 below
+      pileEl.className = "pile pileGrid";
       for (const t of tokens) pileEl.appendChild(t);
     }
   }
@@ -1600,7 +1681,7 @@ function playClap(){
     ui.algoFit.style.transform = `scale(${s})`;
   }
 
-  // ======= Singapore-style number words (with hyphen) =======
+  // ======= Singapore-style number words =======
   const ONES = ["zero","one","two","three","four","five","six","seven","eight","nine"];
   const TEENS = ["ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen"];
   const TENS = ["","", "twenty","thirty","forty","fifty","sixty","seventy","eighty","ninety"];
@@ -1610,7 +1691,7 @@ function playClap(){
     if (n < 10) return ONES[n];
     if (n < 20) return TEENS[n-10];
     const t = Math.floor(n/10), o = n%10;
-    return o === 0 ? TENS[t] : `${TENS[t]}-${ONES[o]}`; // ✅ hyphen
+    return o === 0 ? TENS[t] : `${TENS[t]}-${ONES[o]}`;
   }
 
   function numberToWordsSG(n){
@@ -1626,11 +1707,9 @@ function playClap(){
       return `${ONES[h]} hundred and ${twoDigitWords(r)}`;
     };
 
-    if (n < 1000){
-      return joinHundreds(n);
-    }
+    if (n < 1000) return joinHundreds(n);
 
-    const thousands = Math.floor(n / 1000); // 1..99
+    const thousands = Math.floor(n / 1000);
     const rem = n % 1000;
 
     const thouWords = (thousands < 10) ? `${ONES[thousands]} thousand` : `${twoDigitWords(thousands)} thousand`;
@@ -1640,11 +1719,9 @@ function playClap(){
     const connector = (rem < 100 || isExactHundreds) ? " and " : ", ";
 
     let remWords = "";
-    if (rem < 100){
-      remWords = twoDigitWords(rem);
-    } else {
-      remWords = joinHundreds(rem);
-    }
+    if (rem < 100) remWords = twoDigitWords(rem);
+    else remWords = joinHundreds(rem);
+
     return thouWords + connector + remWords;
   }
 
@@ -1658,10 +1735,9 @@ function playClap(){
 
   const zoneMap = { top:{}, bottom:{} };
 
-  // ✅ Blocks allowed only if SUM fits within 4 digits (no ten-thousands column).
   function isBlocksAllowedFor(A,B){
     const sum = A + B;
-    const maxDigits = Math.max(digitLen(A), digitLen(B), digitLen(sum));
+    const maxDigits = Math.max(String(A).length, String(B).length, String(sum).length);
     return maxDigits <= 4;
   }
 
@@ -1688,9 +1764,7 @@ function playClap(){
   function setMode(mode){
     displayMode = mode;
     enforceModeRule();
-    if (ui.btnBlocks.disabled && displayMode==="blocks"){
-      displayMode = "discs";
-    }
+    if (ui.btnBlocks.disabled && displayMode==="blocks") displayMode = "discs";
     ui.btnBlocks.classList.toggle("active", displayMode==="blocks");
     ui.btnDiscs.classList.toggle("active", displayMode==="discs");
     ui.pillMode.textContent = (displayMode==="blocks") ? "Blocks" : "Discs";
@@ -1724,10 +1798,9 @@ function playClap(){
     renderStepCard(cols);
     renderAlgoResults(cols);
 
-    resetChildPanel(); // ✅ keep child panel in sync
+    resetChildPanel();
   }
 
-  // ======= RENDER =======
   function renderAll(){
     A = clampInt(A, 0, MAX_INPUT);
     B = clampInt(B, 0, MAX_INPUT);
@@ -1739,8 +1812,7 @@ function playClap(){
     ui.eqA.textContent = A;
     ui.eqB.textContent = B;
     ui.prompt.textContent = `(a) Add ${A} and ${B}.`;
-
-    ui.childEq.textContent = `${A} + ${B}`; // ✅ live update even before reset
+    ui.childEq.textContent = `${A} + ${B}`;
 
     const cols = getCols(A,B);
 
@@ -1821,7 +1893,7 @@ function playClap(){
         putTokenTwoCol(pileEl, tok);
       }
     } else {
-      pileEl.className = "pile pileGrid"; // tens: 5 top, 4 below
+      pileEl.className = "pile pileGrid";
       for (let i=0;i<count;i++){
         const tok = makeTokenEl(placeKey);
         pileEl.appendChild(tok);
@@ -1892,13 +1964,10 @@ function playClap(){
     requestAnimationFrame(fitAlgo);
   }
 
-  // ✅ FIX: show carry above Thousands when needed;
-  // hide ONLY the "last regrouped 1" that would sit above Ten-Thousands.
   function updateCarryDisplay(cols){
     const spans = Array.from(ui.carryRow.children);
-    const hideLeftMostCarry = (cols[0] === "tt"); // only for Ten-Thousands column
+    const hideLeftMostCarry = (cols[0] === "tt");
 
-    // any visible carry?
     const anyVisibleCarry = cols.some(k => {
       if (hideLeftMostCarry && k === "tt") return false;
       return (carry[k] || 0) > 0;
@@ -1931,7 +2000,7 @@ function playClap(){
 
   function renderAlgoResults(cols){
     cols.forEach(k => {
-      const box = $("res_" + k);
+      const box = document.getElementById("res_" + k);
       const v = resultDigits[k];
       if (!box) return;
       if (v === null || v === undefined){
@@ -1968,67 +2037,65 @@ function playClap(){
     const placeOrder = cols.slice().reverse();
     const currentPlace = placeOrder[step] || null;
     if (currentPlace){
-      const target = $("res_" + currentPlace);
+      const target = document.getElementById("res_" + currentPlace);
       if (target){
         target.style.outline = "3px dashed rgba(236,72,153,.85)";
         target.style.outlineOffset = "6px";
       }
     }
   }
-function renderStepCard(cols){
-  const da = splitDigits(A);
-  const db = splitDigits(B);
-  const placeOrder = cols.slice().reverse();
-  const p = placeOrder[step] || null;
 
-  if (!p){
-    ui.stepTitle.textContent = "DONE";
-    ui.stepText.textContent = "All tokens are together.";
-    ui.stepL.textContent = "Great!";
-    ui.stepAns.textContent = "✓";
-    ui.stepAns.classList.remove("mystery");
-    return;
+  function renderStepCard(cols){
+    const da = splitDigits(A);
+    const db = splitDigits(B);
+    const placeOrder = cols.slice().reverse();
+    const p = placeOrder[step] || null;
+
+    if (!p){
+      ui.stepTitle.textContent = "DONE";
+      ui.stepText.textContent = "All tokens are together.";
+      ui.stepL.textContent = "Great!";
+      ui.stepAns.textContent = "✓";
+      ui.stepAns.classList.remove("mystery");
+      return;
+    }
+
+    ui.stepTitle.textContent = `STEP ${step + 1}`;
+    ui.stepText.textContent = `Add the ${PLACE_META[p].label.toLowerCase()}.`;
+
+    const carryIn = carry[p] || 0;
+    const aV = da[p] ?? 0;
+    const bV = db[p] ?? 0;
+
+    const baseWord =
+      (p==="o")  ? "one" :
+      (p==="t")  ? "ten" :
+      (p==="h")  ? "hundred" :
+      (p==="th") ? "thousand" :
+      "ten-thousand";
+
+    const colWord =
+      (p==="o")  ? "ones" :
+      (p==="t")  ? "tens" :
+      (p==="h")  ? "hundreds" :
+      (p==="th") ? "thousands" :
+      "ten-thousands";
+
+    const carryWord = (carryIn === 1) ? baseWord : `${baseWord}s`;
+
+    ui.stepL.textContent = carryIn > 0
+      ? `${aV} ${colWord} + ${bV} ${colWord} + ${carryIn} ${carryWord}`
+      : `${aV} ${colWord} + ${bV} ${colWord}`;
+
+    const v = resultDigits[p];
+    if (v === null){
+      ui.stepAns.textContent = "?";
+      ui.stepAns.classList.add("mystery");
+    } else {
+      ui.stepAns.textContent = String(v);
+      ui.stepAns.classList.remove("mystery");
+    }
   }
-
-  ui.stepTitle.textContent = `STEP ${step + 1}`;
-  ui.stepText.textContent = `Add the ${PLACE_META[p].label.toLowerCase()}.`;
-
-  const carryIn = carry[p] || 0;
-  const aV = da[p] ?? 0;
-  const bV = db[p] ?? 0;
-
-  // Base word for this column
-  const baseWord =
-    (p==="o")  ? "one" :
-    (p==="t")  ? "ten" :
-    (p==="h")  ? "hundred" :
-    (p==="th") ? "thousand" :
-    "ten-thousand";
-
-  // Column word used for aV and bV (plural-friendly)
-  const colWord =
-    (p==="o")  ? "ones" :
-    (p==="t")  ? "tens" :
-    (p==="h")  ? "hundreds" :
-    (p==="th") ? "thousands" :
-    "ten-thousands";
-
-  // Carry-in described as correct place value (e.g., 1 ten, 2 tens, 1 hundred...)
-  const carryWord = (carryIn === 1) ? baseWord : `${baseWord}s`;
-
-  ui.stepL.textContent = carryIn > 0
-    ? `${aV} ${colWord} + ${bV} ${colWord} + ${carryIn} ${carryWord}`
-    : `${aV} ${colWord} + ${bV} ${colWord}`;
-
-  const v = resultDigits[p];
-  if (v === null){
-    ui.stepAns.textContent = "?";
-    ui.stepAns.classList.add("mystery");
-  } else {
-    ui.stepAns.textContent = String(v);
-    ui.stepAns.classList.remove("mystery");
-  }
-}
 
   // ======= STEP LOGIC =======
   let busy = false;
@@ -2111,19 +2178,8 @@ function renderStepCard(cols){
     busy = false;
   }
 
-  // ======= RULES =======
-  function showModeRuleNote(){
-    if (isBlocksAllowedFor(A,B)){
-      ui.ruleNote.textContent = "If the answer is 1–4 digits, teacher can choose Blocks or Discs.";
-    } else {
-      ui.ruleNote.textContent = "If the answer is 5 digits, use place value discs.";
-    }
-  }
-
   // ✅ Random helpers
-  function randInt(min, max){
-    return Math.floor(min + Math.random() * (max - min + 1));
-  }
+  function randInt(min, max){ return Math.floor(min + Math.random() * (max - min + 1)); }
   function randomByDigits(d){
     d = clampInt(d, 1, 4);
     const min = (d === 1) ? 0 : Math.pow(10, d-1);
@@ -2137,19 +2193,15 @@ function renderStepCard(cols){
     ui.inB.value = B;
     showErr("");
     enforceModeRule();
-    showModeRuleNote();
     renderAll();
   }
 
-  // =========================
-  // ✅ Child Panel Logic (NEW)
-  // =========================
+  // ✅ Child panel logic
   function setChildMsg(kind, text){
     ui.childMsg.className = "childMsg " + kind;
     ui.childMsg.textContent = text;
     ui.childMsg.style.display = "block";
   }
-
   function checkChildAnswer(){
     resumeAudioIfNeeded();
     const raw = String(ui.childAns.value ?? "").trim();
@@ -2164,7 +2216,7 @@ function renderStepCard(cols){
     if (Number.isFinite(guess) && guess === correct){
       setChildMsg("ok", "🎉 Correct! Well done!");
       playClick();
-      playClap(); 
+      playClap();
       burstConfetti();
     } else {
       setChildMsg("bad",
@@ -2188,7 +2240,6 @@ function renderStepCard(cols){
 
   ui.btnApply.addEventListener("click", () => {
     showErr("");
-
     const rawA = ui.inA.value;
     const rawB = ui.inB.value;
 
@@ -2203,12 +2254,9 @@ function renderStepCard(cols){
     ui.inA.value = A;
     ui.inB.value = B;
 
-    if (trimmed){
-      showErr("Numbers A and B must be 4 digits or less (0–9999).");
-    }
+    if (trimmed) showErr("Numbers A and B must be 4 digits or less (0–9999).");
 
     enforceModeRule();
-    showModeRuleNote();
     renderAll();
   });
 
@@ -2218,18 +2266,14 @@ function renderStepCard(cols){
     ui.inA.value = A;
     ui.inB.value = B;
     enforceModeRule();
-    showModeRuleNote();
     renderAll();
   });
 
   ui.btnReset.addEventListener("click", () => { showErr(""); renderAll(); });
   ui.btnNext.addEventListener("click", () => doNextStep());
 
-  // ✅ Child panel events
   ui.btnChildCheck.addEventListener("click", checkChildAnswer);
-  ui.childAns.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") checkChildAnswer();
-  });
+  ui.childAns.addEventListener("keydown", (e) => { if (e.key === "Enter") checkChildAnswer(); });
 
   window.addEventListener("resize", () => {
     requestAnimationFrame(() => {
@@ -2239,7 +2283,6 @@ function renderStepCard(cols){
   });
 
   // ======= INIT =======
-  showModeRuleNote();
   enforceModeRule();
   renderAll();
 })();
@@ -2247,5 +2290,3 @@ function renderStepCard(cols){
 
 </body>
 </html>
-
-
