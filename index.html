@@ -1039,6 +1039,42 @@
               <button class="btn" id="btnRandom">🎲 Random Numbers</button>
             </div>
 
+            <!-- ✅ Renaming options (carry/regroup controls) -->
+            <div class="fields" id="renameFields">
+              <div>
+                <label>Renaming: Ones → Tens</label>
+                <select id="ren_o">
+                  <option value="any" selected>Any</option>
+                  <option value="rename">Renaming</option>
+                  <option value="no">No renaming</option>
+                </select>
+              </div>
+              <div>
+                <label>Renaming: Tens → Hundreds</label>
+                <select id="ren_t">
+                  <option value="any" selected>Any</option>
+                  <option value="rename">Renaming</option>
+                  <option value="no">No renaming</option>
+                </select>
+              </div>
+              <div>
+                <label>Renaming: Hundreds → Thousands</label>
+                <select id="ren_h">
+                  <option value="any" selected>Any</option>
+                  <option value="rename">Renaming</option>
+                  <option value="no">No renaming</option>
+                </select>
+              </div>
+              <div>
+                <label>Renaming: Thousands → Ten-Thousands</label>
+                <select id="ren_th">
+                  <option value="any" selected>Any</option>
+                  <option value="rename">Renaming</option>
+                  <option value="no">No renaming</option>
+                </select>
+              </div>
+            </div>
+
             <div class="rowBtns">
               <div style="display:flex; gap:10px; flex-wrap:wrap;">
                 <button class="btn primary" id="btnApply">Apply</button>
@@ -1183,6 +1219,12 @@
     // ✅ Teaching highlight targets
     teachCard: $("teachCard"),
     lowerPanel: $("lowerPanel"),
+
+    // ✅ Renaming selects
+    ren_o: $("ren_o"),
+    ren_t: $("ren_t"),
+    ren_h: $("ren_h"),
+    ren_th: $("ren_th"),
   };
 
   // =========================
@@ -1735,6 +1777,10 @@
 
   const zoneMap = { top:{}, bottom:{} };
 
+  // ✅ Renaming preference state (carry out of each place)
+  // o = Ones→Tens, t = Tens→Hundreds, h = Hundreds→Thousands, th = Thousands→Ten-Thousands
+  const renPref = { o:"any", t:"any", h:"any", th:"any" };
+
   function isBlocksAllowedFor(A,B){
     const sum = A + B;
     const maxDigits = Math.max(String(A).length, String(B).length, String(sum).length);
@@ -2186,6 +2232,47 @@
     const max = Math.pow(10, d) - 1;
     return randInt(min, max);
   }
+
+  // ✅ Compute carry-outs from each place: o,t,h,th (th carries into tt)
+  function computeCarryOuts(a, b){
+    const da = splitDigits(a);
+    const db = splitDigits(b);
+    const order = ["o","t","h","th"]; // we control renaming boundaries up to ten-thousands
+    let carryIn = 0;
+    const out = { o:0, t:0, h:0, th:0 };
+    for (const p of order){
+      const total = (da[p]||0) + (db[p]||0) + carryIn;
+      const carryOut = Math.floor(total / 10);
+      out[p] = carryOut;       // carry from this place to next
+      carryIn = carryOut;
+    }
+    return out;
+  }
+
+  function matchesRenamingPrefs(a, b, prefs){
+    const co = computeCarryOuts(a, b);
+    // prefs: {o,t,h,th} each in "any"|"rename"|"no"
+    for (const k of ["o","t","h","th"]){
+      const want = prefs[k] || "any";
+      const hasCarry = (co[k] || 0) > 0;
+      if (want === "rename" && !hasCarry) return false;
+      if (want === "no" && hasCarry) return false;
+    }
+    return true;
+  }
+
+  function randomWithRenaming(d, prefs){
+    // try many times; if too strict, fail gracefully
+    const tries = 3500;
+    for (let i=0;i<tries;i++){
+      const a = randomByDigits(d);
+      const b = randomByDigits(d);
+      if (matchesRenamingPrefs(a, b, prefs)) return { a, b, ok:true };
+    }
+    // fallback
+    return { a: randomByDigits(d), b: randomByDigits(d), ok:false };
+  }
+
   function applyNumbers(a, b){
     A = clampInt(a, 0, MAX_INPUT);
     B = clampInt(b, 0, MAX_INPUT);
@@ -2231,11 +2318,29 @@
   ui.btnBlocks.addEventListener("click", () => setMode("blocks"));
   ui.btnDiscs.addEventListener("click",  () => setMode("discs"));
 
+  // ✅ Renaming dropdown events
+  function syncRenPrefs(){
+    renPref.o  = ui.ren_o?.value  || "any";
+    renPref.t  = ui.ren_t?.value  || "any";
+    renPref.h  = ui.ren_h?.value  || "any";
+    renPref.th = ui.ren_th?.value || "any";
+  }
+  ["ren_o","ren_t","ren_h","ren_th"].forEach(id => {
+    const el = ui[id];
+    if (el) el.addEventListener("change", () => { syncRenPrefs(); showErr(""); });
+  });
+  syncRenPrefs();
+
   ui.btnRandom.addEventListener("click", () => {
+    showErr("");
+    syncRenPrefs();
     const d = parseInt(ui.digitsSel.value || "4", 10);
-    const a = randomByDigits(d);
-    const b = randomByDigits(d);
-    applyNumbers(a, b);
+
+    const r = randomWithRenaming(d, renPref);
+    if (!r.ok){
+      showErr("Could not satisfy all renaming choices together. Generated a random pair instead. Try setting some renaming options to 'Any'.");
+    }
+    applyNumbers(r.a, r.b);
   });
 
   ui.btnApply.addEventListener("click", () => {
